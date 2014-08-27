@@ -4,17 +4,28 @@ import os
 import shutil
 import thread
 
+downloadCount = 0
+totalDownloads = 0
+
 # Download a single file
-def downloadFile(url, destination, message):
+def downloadFile(url, destination):
+	global downloadCount
 	f = open(destination, 'wb')
 	f.write(urllib2.urlopen(url).read())
 	f.close()
 
-	print(message)
+	downloadMessage = 'Completed download ' + str(totalDownloads - downloadCount + 1) + '/' + str(totalDownloads)
+
+	downloadCount -= 1
+
+	print(downloadMessage)
 
 # Icon downloading (multithreaded implementation)
 def downloadIcons(searchTerm, results, verbosity):
-	print('Beginning download of ' + str(results) + ' results for search term "' + searchTerm + '"')
+	global downloadCount
+
+	if verbosity > 0:
+		print('Beginning download of ' + str(results) + ' results for search term "' + searchTerm + '"')
 
 	if verbosity > 1:
 		print('Sending HTTP request')
@@ -49,9 +60,11 @@ def downloadIcons(searchTerm, results, verbosity):
 			print('\tName: ' + appName)
 			print('\tIcon 512x512: ' + appIcon512[appIcon512.rindex('/') + 1:])
 
-		downloadMessage = 'Completed download ' + str(i + 1) + '/' + str(results) + ' for search term "' + searchTerm + '"'
+		targetDir = 'Icons/' + searchTerm + '/'
 
-		thread.start_new_thread(downloadFile, ((appIcon512, targetDir + appName + '512x512' + appIcon512Ext, downloadMessage)))
+		downloadCount += 1
+
+		thread.start_new_thread(downloadFile, ((appIcon512, targetDir + appName + '512x512' + appIcon512Ext)))
 
 		if verbosity > 1:
 			print ('\t\tDownloaded!\n')
@@ -84,9 +97,8 @@ if __name__ == '__main__':
 
 			os.mkdir(targetDir)
 
-			targetDir += '/'
-
 		for term in threadedTerms:
+			totalDownloads += 200
 			thread.start_new_thread(downloadIcons, (term, 200, 0))
 
 		wait = raw_input()
