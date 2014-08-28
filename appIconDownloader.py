@@ -10,6 +10,7 @@ totalDownloads = 0
 # Download a single file
 def downloadFile(url, destination):
 	global downloadCount
+	
 	f = open(destination, 'wb')
 	f.write(urllib2.urlopen(url).read())
 	f.close()
